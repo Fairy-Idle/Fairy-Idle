@@ -1,0 +1,4 @@
+??? (Rial):
+    Appearance: rial_mask.png
+Rial:
+    Appearance: rial.png
