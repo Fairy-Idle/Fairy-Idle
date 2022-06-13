@@ -4,11 +4,11 @@ class Chapter:
         self.progress: int = int()
         self.setting: str = str()
         self.characters: dict = self.load_characters()
-        self.dialogue: dict = self.load_dialogue()
+        self.dialogue: list = self.load_dialogue()
 
     def load_characters(self) -> dict:
         characters = dict()
-        with open(f"Chapters/{self.name}/Characters.txt") as characters_txt:
+        with open(f"chapters/{self.name}/characters.txt") as characters_txt:
             lines = characters_txt.read().split("\n")
             for line in lines:
                 if " " * 4 not in line:
@@ -20,12 +20,9 @@ class Chapter:
         return characters
 
     def load_dialogue(self) -> dict:
-        dialogue = dict()
-        with open(f"Chapters/{self.name}/Dialogue.txt") as dialogue_txt:
+        dialogue = list()
+        with open(f"chapters/{self.name}/dialogue.txt") as dialogue_txt:
             lines = dialogue_txt.read().split("\n")
             for line in lines:
-                character, dialogue_line = line.split(": ")
-                if character not in dialogue:
-                    dialogue[character] = list()
-                dialogue[character].append(dialogue_line)
+                dialogue.append(line)
         return dialogue

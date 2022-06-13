@@ -1,4 +1,4 @@
 ??? (Rial):
-    Appearance: rial_mask.png
+    Appearance: images/rial_mask.png
 Rial:
-    Appearance: rial.png
+    Appearance: images/rial.png

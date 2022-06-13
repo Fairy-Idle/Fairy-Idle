@@ -1,3 +1,3 @@
 ??? (Rial): Hello, {self.player.name}, and welcome to Fairy Idle!
-??? (Rial): My name is a Rial and I'll be your guide!
+??? (Rial): My name is Rial and I'll be your guide!
 Rial: I hope you rested well, the journey was a *bit* bumpy.
