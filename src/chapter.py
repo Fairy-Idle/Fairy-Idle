@@ -11,6 +11,8 @@ class Chapter:
         with open(f"chapters/{self.name}/characters.txt") as characters_txt:
             lines = characters_txt.read().split("\n")
             for line in lines:
+                if line == "":
+                    continue
                 if " " * 4 not in line:
                     character = line[:-1]
                     characters[character] = dict()
@@ -24,5 +26,7 @@ class Chapter:
         with open(f"chapters/{self.name}/dialogue.txt") as dialogue_txt:
             lines = dialogue_txt.read().split("\n")
             for line in lines:
+                if line == "":
+                    continue
                 dialogue.append(line)
         return dialogue
