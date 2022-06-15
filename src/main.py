@@ -5,6 +5,10 @@ from text import Text
 from player import Player
 
 
+DIALOGUE_POS: tuple = (40, 640)
+CHARACTER_NAME_POS: tuple = (40, 600)
+
+
 class App:
     def __init__(self) -> None:
         pygame.init()
@@ -19,9 +23,9 @@ class App:
 
         self.chapter: Chapter
         self.event_index: int = 0
-        self.dialogue_pos: tuple = (40, 640)
         self.chapter_events: list = list()
         self.rendered_characters: dict = dict()
+        self.rendered_names: dict = dict()
         self.rendered_dialogue: list = list()
         self.current_dialogue: Text
 
@@ -49,6 +53,8 @@ class App:
 
     def draw(self) -> None:
         self.screen.fill((0, 0, 0))
+        for name in self.rendered_names.values():
+            name.draw(self.screen)
         for character in self.rendered_characters.values():
             character.draw(self.screen)
         self.current_dialogue.draw(self.screen)
@@ -66,6 +72,9 @@ class App:
                 character_appearance = self.chapter.characters[character]["Appearance"]
                 self.rendered_characters[character] = Entity((0, 0), character_appearance, width=512, height=512)
                 self.rendered_characters[character].visible = False
+                name_text = character[:character.find("(")] if character.find("(") != -1 else character
+                self.rendered_names[character] = Text(CHARACTER_NAME_POS, self.fonts[("Times New Roman", 28)], name_text, (255, 255, 0), border=True)
+                self.rendered_names[character].visible = False
 
     def render_dialogue(self):
         self.chapter_events.clear()
@@ -89,7 +98,10 @@ class App:
                     self.chapter_events.append((self.exit_event, character))
                 case _:
                     dialogue_font = self.fonts[("Times New Roman", 28)]
-                    rendered_line = Text(self.dialogue_pos, dialogue_font, line, (255, 255, 0), width=1200, height=40)
+                    character, dialogue = line.split(": ")
+                    self.rendered_dialogue.append(len(self.chapter_events))
+                    self.chapter_events.append((self.show_name_event, character))
+                    rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, (255, 255, 0), width=1200, border=True)
                     self.rendered_dialogue.append(rendered_line)
 
     def progress_chapter(self) -> None:
@@ -113,6 +125,12 @@ class App:
             self.current_dialogue.render_text(text)
 
     # region Dialogue Event Methods
+    def show_name_event(self, character):
+        if not self.rendered_names[character].visible:
+            for name in self.rendered_names:
+                self.rendered_names[name].visible = False
+            self.rendered_names[character].visible = True
+
     def enter_event(self, character, x, y):
         self.rendered_characters[character].pos = (int(x), int(y))
         self.rendered_characters[character].visible = True
