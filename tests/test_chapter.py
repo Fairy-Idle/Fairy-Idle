@@ -10,7 +10,7 @@ class TestChapterMethods(unittest.TestCase):
     def test_load_characters(self) -> None:
         characters = {
             "??? (Rial)": {
-                "Appearance": "images/rial_mask_2.png"
+                "Appearance": "images/rial_mask.png"
             },
             "Rial": {
                 "Appearance": "images/rial.png"
@@ -20,8 +20,11 @@ class TestChapterMethods(unittest.TestCase):
 
     def test_load_dialogue(self) -> None:
         dialogue = [
-            "??? (Rial): Hello, {self.player.name}, and welcome to Fairy Idle!",
+            "Enter \"??? (Rial)\" (40, 200)",
+            "??? (Rial): Hello {self.player.name}, and welcome to Fairy Idle!",
             "??? (Rial): My name is Rial and I'll be your guide!",
-            "Rial: I hope you rested well, the journey was a *bit* bumpy."
+            "Replace \"??? (Rial)\" with Rial",
+            "Rial: I hope you rested well, the journey was a *bit* bumpy.",
+            "Exit Rial"
         ]
         self.assertEqual(self.chapter_0.dialogue, dialogue)

@@ -11,12 +11,17 @@ class Entity:
             self.image = pygame.image.load(image)
             if width > 0 and height > 0:
                 self.image = pygame.transform.scale(self.image, (width, height))
+            self.focus = pygame.transform.scale(self.image, (int(width * 1.1), int(height * 1.1)))
         else:
             self.image = None
+            self.focus = None
         self.visible: bool = True
+        self.focused: bool = False
 
     def draw(self, screen: Surface) -> None:
         if not self.visible:
             return
-        if self.image is not None:
+        if self.focused:
+            screen.blit(self.focus, (self.pos[0] - self.width * 0.05, self.pos[1] - self.height * 0.05))
+        elif self.image is not None:
             screen.blit(self.image, self.pos)

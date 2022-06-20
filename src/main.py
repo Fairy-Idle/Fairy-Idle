@@ -6,7 +6,7 @@ from player import Player
 
 
 DIALOGUE_POS: tuple = (40, 640)
-CHARACTER_NAME_POS: tuple = (40, 600)
+NAME_POS: tuple = (40, 600)
 
 
 class App:
@@ -65,31 +65,55 @@ class App:
         self.render_dialogue()
         self.progress_chapter()
 
-    def render_characters(self):
+    def render_characters(self) -> None:
         self.rendered_characters.clear()
         for character in self.chapter.characters:
             if character not in self.rendered_characters:
                 character_appearance = self.chapter.characters[character]["Appearance"]
                 self.rendered_characters[character] = Entity((0, 0), character_appearance, width=512, height=512)
                 self.rendered_characters[character].visible = False
-                name_text = character[:character.find("(")] if character.find("(") != -1 else character
-                self.rendered_names[character] = Text(CHARACTER_NAME_POS, self.fonts[("Times New Roman", 28)], name_text, (255, 255, 0), border=True)
+                name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
+                name_font = self.fonts[("Times New Roman", 28)]
+                name_color = (255, 255, 0)
+                self.rendered_names[character] = Text(NAME_POS, name_font, name_text, name_color, border=True)
                 self.rendered_names[character].visible = False
 
-    def render_dialogue(self):
+    def render_dialogue(self) -> None:
         self.chapter_events.clear()
         self.rendered_dialogue.clear()
         for line in self.chapter.dialogue:
             words = line.split()
             match words[0]:
                 case "Enter":
-                    character, x, y = words[1], words[2][1:-1], words[3][:-1]
+                    if "\"" in words[1]:
+                        words = " ".join(words[1:])
+                        start = words.find("\"")
+                        end = words.find("\"", start + 1)
+                        character, x, y = words[start + 1:end], *words[end + 1:].split()
+                        x, y = x[1:-1], y[:-1]
+                    else:
+                        character, x, y = words[1], words[2][1:-1], words[3][:-1]
                     self.rendered_dialogue.append(len(self.chapter_events))
                     self.chapter_events.append((self.enter_event, character, x, y))
                 case "Replace":
-                    old_character, new_character = words[1], words[3]
+                    if "\"" in words[1] or "\"" in words[3]:
+                        words = " ".join(words[1:])
+                        old_character, new_character = str(), str()
+                        while "\"" in words:
+                            start = words.find("\"")
+                            end = words.find("\"", start + 1)
+                            character = words[start + 1:end]
+                            words = words[end + 1:]
+                            if len(old_character) == 0:
+                                old_character = character
+                            else:
+                                new_character = character
+                        if len(words) > 0:
+                            new_character = words.split()[-1]
+                    else:
+                        old_character, new_character = words[1], words[3]
                     self.rendered_dialogue.append(len(self.chapter_events))
-                    self.rendered_characters[new_character].pos = self.rendered_characters[words[1]].pos
+                    self.rendered_characters[new_character].pos = self.rendered_characters[old_character].pos
                     self.rendered_characters[new_character].visible = False
                     self.chapter_events.append((self.replace_event, old_character, new_character))
                 case "Exit":
@@ -101,8 +125,13 @@ class App:
                     character, dialogue = line.split(": ")
                     self.rendered_dialogue.append(len(self.chapter_events))
                     self.chapter_events.append((self.show_name_event, character))
-                    rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, (255, 255, 0), width=1200, border=True)
+                    self.rendered_dialogue.append(len(self.chapter_events))
+                    self.chapter_events.append((self.focus_event, character))
+                    dialogue_color = (255, 255, 0)
+                    rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, dialogue_color, width=1200, border=True)
                     self.rendered_dialogue.append(rendered_line)
+                    self.rendered_dialogue.append(len(self.chapter_events))
+                    self.chapter_events.append((self.unfocus_event, character))
 
     def progress_chapter(self) -> None:
         while isinstance(self.rendered_dialogue[self.event_index], int):
@@ -116,7 +145,7 @@ class App:
         self.event_index += 1
         self.event_index %= len(self.rendered_dialogue)
 
-    def format_dialogue(self):
+    def format_dialogue(self) -> None:
         if "{" in self.current_dialogue.text:
             text = self.current_dialogue.text
             start = text.find("{")
@@ -125,22 +154,28 @@ class App:
             self.current_dialogue.render_text(text)
 
     # region Dialogue Event Methods
-    def show_name_event(self, character):
+    def show_name_event(self, character) -> None:
         if not self.rendered_names[character].visible:
             for name in self.rendered_names:
                 self.rendered_names[name].visible = False
             self.rendered_names[character].visible = True
 
-    def enter_event(self, character, x, y):
+    def focus_event(self, character) -> None:  # todo put characters into focus when they are talking
+        self.rendered_characters[character].focused = True
+
+    def unfocus_event(self, character) -> None:  # todo put characters out of focus when they are talking
+        self.rendered_characters[character].focused = False
+
+    def enter_event(self, character, x, y) -> None:
         self.rendered_characters[character].pos = (int(x), int(y))
         self.rendered_characters[character].visible = True
 
-    def replace_event(self, old_character, new_character):
+    def replace_event(self, old_character, new_character) -> None:
         self.rendered_characters[new_character].pos = self.rendered_characters[old_character].pos
         self.rendered_characters[new_character].visible = True
         self.rendered_characters[old_character].visible = False
 
-    def exit_event(self, character):
+    def exit_event(self, character) -> None:
         self.rendered_characters[character].visible = False
     # endregion
 

@@ -1,4 +1,6 @@
-???(Rial):
+??? (Rial):
     Appearance: images/rial_mask.png
 Rial:
     Appearance: images/rial.png
+Viol:
+    Appearance: images/viol.png
