@@ -10,8 +10,10 @@ class Entity:
         if image is not None:
             self.image = pygame.image.load(image)
             if width > 0 and height > 0:
+                self.focus = pygame.transform.scale(self.image, (int(width * 1.1), int(height * 1.1)))
                 self.image = pygame.transform.scale(self.image, (width, height))
-            self.focus = pygame.transform.scale(self.image, (int(width * 1.1), int(height * 1.1)))
+            self.image = self.image.convert_alpha()
+            self.focus = self.focus.convert_alpha()
         else:
             self.image = None
             self.focus = None

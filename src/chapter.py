@@ -26,7 +26,7 @@ class Chapter:
         with open(f"chapters/{self.name}/dialogue.txt") as dialogue_txt:
             lines = dialogue_txt.read().split("\n")
             for line in lines:
-                if line == "":
+                if line == "" or line[0] == "#":
                     continue
                 dialogue.append(line)
         return dialogue

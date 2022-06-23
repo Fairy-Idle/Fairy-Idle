@@ -4,7 +4,7 @@ from pygame.surface import Surface
 from pygame.draw import line
 
 
-class Text(Entity):
+class Text(Entity):  # todo is this class necessary? might be needless abstraction and can be substituted with a function or two...
     def __init__(self, pos: tuple, font: Font, text: str, color: tuple, image: str = None, width: int = 0, height: int = 0, border: bool = True) -> None:
         super().__init__(pos, image, width, height)
         self.pos: tuple = pos

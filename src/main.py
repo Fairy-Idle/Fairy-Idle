@@ -22,8 +22,8 @@ class App:
         self.fonts[("Times New Roman", 28)] = pygame.font.SysFont("Times New Roman", 28)
 
         self.chapter: Chapter
-        self.event_index: int = 0
         self.chapter_events: list = list()
+        self.event_index: int = 0
         self.rendered_characters: dict = dict()
         self.rendered_names: dict = dict()
         self.rendered_dialogue: list = list()
@@ -68,15 +68,16 @@ class App:
     def render_characters(self) -> None:
         self.rendered_characters.clear()
         for character in self.chapter.characters:
-            if character not in self.rendered_characters:
-                character_appearance = self.chapter.characters[character]["Appearance"]
-                self.rendered_characters[character] = Entity((0, 0), character_appearance, width=512, height=512)
-                self.rendered_characters[character].visible = False
-                name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
-                name_font = self.fonts[("Times New Roman", 28)]
-                name_color = (255, 255, 0)
-                self.rendered_names[character] = Text(NAME_POS, name_font, name_text, name_color, border=True)
-                self.rendered_names[character].visible = False
+            if character in self.rendered_characters:
+                continue
+            character_appearance = self.chapter.characters[character]["Appearance"]
+            self.rendered_characters[character] = Entity((0, 0), character_appearance, width=512, height=512)
+            self.rendered_characters[character].visible = False
+            name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
+            name_font = self.fonts[("Times New Roman", 28)]
+            name_color = (255, 255, 0)
+            self.rendered_names[character] = Text(NAME_POS, name_font, name_text, name_color, border=True)
+            self.rendered_names[character].visible = False
 
     def render_dialogue(self) -> None:
         self.chapter_events.clear()
@@ -89,7 +90,7 @@ class App:
                         words = " ".join(words[1:])
                         start = words.find("\"")
                         end = words.find("\"", start + 1)
-                        character, x, y = words[start + 1:end], *words[end + 1:].split()
+                        character, x, y = words[start + 1:end], *words[end + 1:].strip().split()
                         x, y = x[1:-1], y[:-1]
                     else:
                         character, x, y = words[1], words[2][1:-1], words[3][:-1]
@@ -117,7 +118,12 @@ class App:
                     self.rendered_characters[new_character].visible = False
                     self.chapter_events.append((self.replace_event, old_character, new_character))
                 case "Exit":
-                    character = words[1]
+                    if "\"" in words[1]:
+                        start = words[1].find("\"")
+                        end = words[1].find("\"", start + 1)
+                        character = words[1][start + 1:end]
+                    else:
+                        character = words[1]
                     self.rendered_dialogue.append(len(self.chapter_events))
                     self.chapter_events.append((self.exit_event, character))
                 case _:
@@ -146,24 +152,26 @@ class App:
         self.event_index %= len(self.rendered_dialogue)
 
     def format_dialogue(self) -> None:
-        if "{" in self.current_dialogue.text:
-            text = self.current_dialogue.text
-            start = text.find("{")
-            end = text.find("}")
-            text = f"{text[:start]}{eval(text[start + 1:end])}{text[end + 1:]}"
-            self.current_dialogue.render_text(text)
+        if "{" not in self.current_dialogue.text:
+            return
+        text = self.current_dialogue.text
+        start = text.find("{")
+        end = text.find("}")
+        text = f"{text[:start]}{eval(text[start + 1:end])}{text[end + 1:]}"
+        self.current_dialogue.render_text(text)
 
     # region Dialogue Event Methods
     def show_name_event(self, character) -> None:
-        if not self.rendered_names[character].visible:
-            for name in self.rendered_names:
-                self.rendered_names[name].visible = False
-            self.rendered_names[character].visible = True
+        if self.rendered_names[character].visible:
+            return
+        for name in self.rendered_names:
+            self.rendered_names[name].visible = False
+        self.rendered_names[character].visible = True
 
-    def focus_event(self, character) -> None:  # todo put characters into focus when they are talking
+    def focus_event(self, character) -> None:
         self.rendered_characters[character].focused = True
 
-    def unfocus_event(self, character) -> None:  # todo put characters out of focus when they are talking
+    def unfocus_event(self, character) -> None:
         self.rendered_characters[character].focused = False
 
     def enter_event(self, character, x, y) -> None:
