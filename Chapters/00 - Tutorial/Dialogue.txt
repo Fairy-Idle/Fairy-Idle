@@ -5,5 +5,8 @@ Replace "??? (Rial)" with "Rial"
 Rial: I hope you rested well, the journey was a *bit* bumpy.
 Enter "Viol" (740, 200)
 Viol: Yeah, I was honestly surprised you didn't wake up halfway through...
+setattr(self, "dialogue_pos", (0, -100))
+Rial: Test!
 Exit "Viol"
 Exit "Rial"
+setattr(self, "dialogue_pos", (0, 0))

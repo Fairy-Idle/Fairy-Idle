@@ -21,6 +21,9 @@ class App:
         self.fonts: dict = dict()
         self.fonts[("Times New Roman", 28)] = pygame.font.SysFont("Times New Roman", 28)
 
+        self.dialogue_surface: pygame.Surface = pygame.Surface((1280, 720))
+        self.dialogue_pos = (0, 0)
+
         self.chapter: Chapter
         self.chapter_events: list = list()
         self.event_index: int = 0
@@ -53,11 +56,13 @@ class App:
 
     def draw(self) -> None:
         self.screen.fill((0, 0, 0))
+        self.dialogue_surface.fill((0, 0, 0))
         for name in self.rendered_names.values():
-            name.draw(self.screen)
+            name.draw(self.dialogue_surface)
         for character in self.rendered_characters.values():
-            character.draw(self.screen)
-        self.current_dialogue.draw(self.screen)
+            character.draw(self.dialogue_surface)
+        self.current_dialogue.draw(self.dialogue_surface)
+        self.screen.blit(self.dialogue_surface, self.dialogue_pos)
 
     def load_chapter(self, chapter_name) -> None:
         self.chapter = Chapter(chapter_name)
@@ -127,6 +132,10 @@ class App:
                     self.rendered_dialogue.append(len(self.chapter_events))
                     self.chapter_events.append((self.exit_event, character))
                 case _:
+                    if ": " not in line:
+                        self.rendered_dialogue.append(len(self.chapter_events))
+                        self.chapter_events.append((eval, line))
+                        continue
                     dialogue_font = self.fonts[("Times New Roman", 28)]
                     character, dialogue = line.split(": ")
                     self.rendered_dialogue.append(len(self.chapter_events))
