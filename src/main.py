@@ -95,7 +95,7 @@ class App:
                         words = " ".join(words[1:])
                         start = words.find("\"")
                         end = words.find("\"", start + 1)
-                        character, x, y = words[start + 1:end], *words[end + 1:].strip().split()
+                        character, x, y = words[start + 1:end], *words[end + 1:].split()
                         x, y = x[1:-1], y[:-1]
                     else:
                         character, x, y = words[1], words[2][1:-1], words[3][:-1]
@@ -135,18 +135,18 @@ class App:
                     if ": " not in line:
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((eval, line))
-                        continue
-                    dialogue_font = self.fonts[("Times New Roman", 28)]
-                    character, dialogue = line.split(": ")
-                    self.rendered_dialogue.append(len(self.chapter_events))
-                    self.chapter_events.append((self.show_name_event, character))
-                    self.rendered_dialogue.append(len(self.chapter_events))
-                    self.chapter_events.append((self.focus_event, character))
-                    dialogue_color = (255, 255, 0)
-                    rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, dialogue_color, width=1200, border=True)
-                    self.rendered_dialogue.append(rendered_line)
-                    self.rendered_dialogue.append(len(self.chapter_events))
-                    self.chapter_events.append((self.unfocus_event, character))
+                    else:
+                        dialogue_font = self.fonts[("Times New Roman", 28)]
+                        character, dialogue = line.split(": ")
+                        self.rendered_dialogue.append(len(self.chapter_events))
+                        self.chapter_events.append((self.show_name_event, character))
+                        self.rendered_dialogue.append(len(self.chapter_events))
+                        self.chapter_events.append((self.focus_event, character))
+                        dialogue_color = (255, 255, 0)
+                        rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, dialogue_color, width=1200, border=True)
+                        self.rendered_dialogue.append(rendered_line)
+                        self.rendered_dialogue.append(len(self.chapter_events))
+                        self.chapter_events.append((self.unfocus_event, character))
 
     def progress_chapter(self) -> None:
         while isinstance(self.rendered_dialogue[self.event_index], int):
