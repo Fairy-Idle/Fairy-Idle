@@ -2,5 +2,5 @@
     Appearance: images/rial_mask.png
 Rial:
     Appearance: images/rial.png
-Viol:
+??? (Viol):
     Appearance: images/viol.png

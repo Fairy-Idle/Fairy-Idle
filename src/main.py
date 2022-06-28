@@ -8,6 +8,11 @@ from player import Player
 DIALOGUE_POS: tuple = (40, 640)
 NAME_POS: tuple = (40, 600)
 
+CHARACTER_COLORS: dict = {
+    "Rial": (255, 255, 0),
+    "Viol": (143, 0, 255)
+}
+
 
 class App:
     def __init__(self) -> None:
@@ -80,8 +85,9 @@ class App:
             self.rendered_characters[character].visible = False
             name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
             name_font = self.fonts[("Times New Roman", 28)]
-            name_color = (255, 255, 0)
-            self.rendered_names[character] = Text(NAME_POS, name_font, name_text, name_color, border=True)
+            character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
+            character_color = CHARACTER_COLORS[character_name]
+            self.rendered_names[character] = Text(NAME_POS, name_font, name_text, character_color, border=True)
             self.rendered_names[character].visible = False
 
     def render_dialogue(self) -> None:
@@ -124,9 +130,10 @@ class App:
                     self.chapter_events.append((self.replace_event, old_character, new_character))
                 case "Exit":
                     if "\"" in words[1]:
-                        start = words[1].find("\"")
-                        end = words[1].find("\"", start + 1)
-                        character = words[1][start + 1:end]
+                        words = " ".join(words[1:])
+                        start = words.find("\"")
+                        end = words.find("\"", start + 1)
+                        character = words[start + 1:end]
                     else:
                         character = words[1]
                     self.rendered_dialogue.append(len(self.chapter_events))
@@ -142,8 +149,9 @@ class App:
                         self.chapter_events.append((self.show_name_event, character))
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.focus_event, character))
-                        dialogue_color = (255, 255, 0)
-                        rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, dialogue_color, width=1200, border=True)
+                        character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
+                        character_color = CHARACTER_COLORS[character_name]
+                        rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, character_color, width=1200, border=True)
                         self.rendered_dialogue.append(rendered_line)
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.unfocus_event, character))
