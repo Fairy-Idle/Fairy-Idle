@@ -1,3 +1,4 @@
+from tkinter.tix import WINDOW
 import pygame
 from chapter import Chapter
 from entity import Entity
@@ -5,6 +6,7 @@ from text import Text
 from player import Player
 
 
+WINDOW_SIZE = (1280, 720)
 DIALOGUE_POS: tuple = (40, 640)
 NAME_POS: tuple = (40, 600)
 
@@ -20,13 +22,13 @@ class App:
 
         # region Variables
         pygame.display.set_caption("Fairy Idle")
-        self.screen: pygame.Surface = pygame.display.set_mode((1280, 720))
+        self.screen: pygame.Surface = pygame.display.set_mode(WINDOW_SIZE)
         self.clock: pygame.time.Clock = pygame.time.Clock()
 
         self.fonts: dict = dict()
         self.fonts[("Times New Roman", 28)] = pygame.font.SysFont("Times New Roman", 28)
 
-        self.dialogue_surface: pygame.Surface = pygame.Surface((1280, 720))
+        self.dialogue_surface: pygame.Surface = pygame.Surface(WINDOW_SIZE)
         self.dialogue_pos = (0, 0)
 
         self.chapter: Chapter
