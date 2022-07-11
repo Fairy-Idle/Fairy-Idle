@@ -1,4 +1,3 @@
-from tkinter.tix import WINDOW
 import pygame
 from chapter import Chapter
 from entity import Entity
@@ -9,11 +8,6 @@ from player import Player
 WINDOW_SIZE = (1280, 720)
 DIALOGUE_POS: tuple = (40, 640)
 NAME_POS: tuple = (40, 600)
-
-CHARACTER_COLORS: dict = {
-    "Rial": (255, 255, 0),
-    "Viol": (143, 0, 255)
-}
 
 
 class App:
@@ -34,6 +28,7 @@ class App:
         self.chapter: Chapter
         self.chapter_events: list = list()
         self.event_index: int = 0
+
         self.rendered_characters: dict = dict()
         self.rendered_names: dict = dict()
         self.rendered_dialogue: list = list()
@@ -87,8 +82,9 @@ class App:
             self.rendered_characters[character].visible = False
             name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
             name_font = self.fonts[("Times New Roman", 28)]
-            character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
-            character_color = CHARACTER_COLORS[character_name]
+            # character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
+            character_color = self.chapter.characters[character]["Color"].strip("(").strip(")")
+            character_color = [int(value) for value in character_color.split(", ")]
             self.rendered_names[character] = Text(NAME_POS, name_font, name_text, character_color, border=True)
             self.rendered_names[character].visible = False
 
@@ -152,7 +148,7 @@ class App:
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.focus_event, character))
                         character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
-                        character_color = CHARACTER_COLORS[character_name]
+                        character_color = self.rendered_names[character].color
                         rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, character_color, width=1200, border=True)
                         self.rendered_dialogue.append(rendered_line)
                         self.rendered_dialogue.append(len(self.chapter_events))

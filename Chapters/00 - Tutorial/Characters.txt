@@ -1,6 +1,9 @@
 ??? (Rial):
     Appearance: images/rial_mask.png
+    Color: (255, 255, 0)
 Rial:
     Appearance: images/rial.png
+    Color: (255, 255, 0)
 ??? (Viol):
     Appearance: images/viol.png
+    Color: (143, 0, 255)
