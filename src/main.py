@@ -59,11 +59,9 @@ class App:
     def draw(self) -> None:
         self.screen.fill((0, 0, 0))
         self.dialogue_surface.fill((0, 0, 0))
-        for name in self.rendered_names.values():
-            name.draw(self.dialogue_surface)
-        for character in self.rendered_characters.values():
-            character.draw(self.dialogue_surface)
-        self.current_dialogue.draw(self.dialogue_surface)
+        surfaces: list[pygame.Surface] = [*self.rendered_names.values(), *self.rendered_characters.values(), self.current_dialogue]
+        for surface in surfaces:
+            surface.draw(self.dialogue_surface)
         self.screen.blit(self.dialogue_surface, self.dialogue_pos)
 
     def load_chapter(self, chapter_name) -> None:
