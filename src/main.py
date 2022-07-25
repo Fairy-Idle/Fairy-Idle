@@ -5,9 +5,18 @@ from text import Text
 from player import Player
 
 
-WINDOW_SIZE = (1280, 720)
-DIALOGUE_POS: tuple = (40, 640)
-NAME_POS: tuple = (40, 600)
+WINDOW_SIZE: tuple[int, int] = (1280, 720)
+
+# region Idle Variables
+pass
+# endregion
+
+# region VN Variables
+SPRITE_SIZE: tuple[int, int] = (512, 512)
+DIALOGUE_POS: tuple[int, int] = (40, 640)
+DIALOGUE_WIDTH: int = 1200 / 1280 * WINDOW_SIZE[0]
+NAME_POS: tuple[int, int] = (40, 600)
+# endregion
 
 
 class App:
@@ -19,25 +28,36 @@ class App:
         self.screen: pygame.Surface = pygame.display.set_mode(WINDOW_SIZE)
         self.clock: pygame.time.Clock = pygame.time.Clock()
 
-        self.fonts: dict = dict()
+        self.fonts: dict[tuple[str, int]: pygame.font.SysFont] = dict()
         self.fonts[("Times New Roman", 28)] = pygame.font.SysFont("Times New Roman", 28)
 
-        self.dialogue_surface: pygame.Surface = pygame.Surface(WINDOW_SIZE)
-        self.dialogue_pos = (0, 0)
+        self.vn_surface: pygame.Surface = pygame.Surface(WINDOW_SIZE)
+        self.vn_pos: tuple[int, int] = (0, 0)
 
-        self.chapter: Chapter
-        self.chapter_events: list = list()
+        self.idle_surface: pygame.Surface = pygame.Surface(WINDOW_SIZE)
+        self.idle_pos: tuple[int, int] = (0, 0)
+        self.inventory_pos: tuple[int, int] = (20, 20)
+        self.inventory: Text = Text(self.inventory_pos, self.fonts[("Times New Roman", 28)], "Inventory", (0, 255, 0), None, WINDOW_SIZE[0] / 4, 680 / 720 * WINDOW_SIZE[1], True, "center")
+
+        self.chapter: Chapter = None
+        self.chapter_events: list[callable, str] = list()
         self.event_index: int = 0
 
-        self.rendered_characters: dict = dict()
-        self.rendered_names: dict = dict()
-        self.rendered_dialogue: list = list()
-        self.current_dialogue: Text
+        self.rendered_characters: dict[str: Entity] = dict()
+        self.rendered_names: dict[str: Text] = dict()
+        self.rendered_dialogue: list[Text] = list()
+        self.current_dialogue: Text = None
 
+        self.vn_surfaces: list[Entity | Text] = list()
+        self.inventory_surfaces: list[Entity | Text] = list()
+        self.idle_surfaces: list[Entity | Text] = list()
+
+        self.mode: str = str()
         self.player = Player("Sacred")
         # endregion
 
-        self.load_chapter("00 - Tutorial")
+        # self.load_chapter("00 - Tutorial")
+        self.load_idle()
 
         while True:
             for event in pygame.event.get():
@@ -58,30 +78,53 @@ class App:
 
     def draw(self) -> None:
         self.screen.fill((0, 0, 0))
-        self.dialogue_surface.fill((0, 0, 0))
-        surfaces: list[pygame.Surface] = [*self.rendered_names.values(), *self.rendered_characters.values(), self.current_dialogue]
-        for surface in surfaces:
-            surface.draw(self.dialogue_surface)
-        self.screen.blit(self.dialogue_surface, self.dialogue_pos)
+        self.vn_surface.fill((0, 0, 0))
+
+        self.vn_surfaces.clear()
+        self.idle_surfaces.clear()
+        if self.mode == "vn":
+            self.get_vn_surfaces()
+            for surface in self.vn_surfaces:
+                surface.draw(self.vn_surface)
+            self.screen.blit(self.vn_surface, self.vn_pos)
+        elif self.mode == "idle":
+            self.get_idle_surfaces()
+            for surface in self.idle_surfaces:
+                surface.draw(self.idle_surface)
+            self.screen.blit(self.idle_surface, self.idle_pos)
+
+    def get_vn_surfaces(self) -> None:
+        self.vn_surfaces.extend(self.rendered_names.values())
+        self.vn_surfaces.extend(self.rendered_characters.values())
+        if self.current_dialogue is not None:
+            self.vn_surfaces.append(self.current_dialogue)
+
+    def get_idle_surfaces(self) -> None:
+        self.idle_surfaces.append(self.inventory)
 
     def load_chapter(self, chapter_name) -> None:
         self.chapter = Chapter(chapter_name)
+        self.mode = "vn"
         self.render_characters()
         self.render_dialogue()
         self.progress_chapter()
+
+    def load_idle(self) -> None:
+        self.mode = "idle"
+        pass
 
     def render_characters(self) -> None:
         self.rendered_characters.clear()
         for character in self.chapter.characters:
             if character in self.rendered_characters:
                 continue
-            character_appearance = self.chapter.characters[character]["Appearance"]
-            self.rendered_characters[character] = Entity((0, 0), character_appearance, width=512, height=512)
+            character_appearance: str = self.chapter.characters[character]["Appearance"]
+            self.rendered_characters[character] = Entity((0, 0), character_appearance, *SPRITE_SIZE)
             self.rendered_characters[character].visible = False
-            name_text = character[:character.find("(") - 1] if character.find("(") != -1 else character
-            name_font = self.fonts[("Times New Roman", 28)]
+            name_text: str = character[:character.find("(") - 1] if character.find("(") != -1 else character
+            name_font: pygame.font.SysFont = self.fonts[("Times New Roman", 28)]
             # character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
-            character_color = self.chapter.characters[character]["Color"].strip("(").strip(")")
+            character_color: str = self.chapter.characters[character]["Color"].strip("(").strip(")")
             character_color = [int(value) for value in character_color.split(", ")]
             self.rendered_names[character] = Text(NAME_POS, name_font, name_text, character_color, border=True)
             self.rendered_names[character].visible = False
@@ -90,13 +133,13 @@ class App:
         self.chapter_events.clear()
         self.rendered_dialogue.clear()
         for line in self.chapter.dialogue:
-            words = line.split()
+            words: list[str] = line.split()
             match words[0]:
                 case "Enter":
                     if "\"" in words[1]:
-                        words = " ".join(words[1:])
-                        start = words.find("\"")
-                        end = words.find("\"", start + 1)
+                        words: str = " ".join(words[1:])
+                        start: int = words.find("\"")
+                        end: int = words.find("\"", start + 1)
                         character, x, y = words[start + 1:end], *words[end + 1:].split()
                         x, y = x[1:-1], y[:-1]
                     else:
@@ -105,12 +148,12 @@ class App:
                     self.chapter_events.append((self.enter_event, character, x, y))
                 case "Replace":
                     if "\"" in words[1] or "\"" in words[3]:
-                        words = " ".join(words[1:])
+                        words: str = " ".join(words[1:])
                         old_character, new_character = str(), str()
                         while "\"" in words:
-                            start = words.find("\"")
-                            end = words.find("\"", start + 1)
-                            character = words[start + 1:end]
+                            start: int = words.find("\"")
+                            end: int = words.find("\"", start + 1)
+                            character: str = words[start + 1:end]
                             words = words[end + 1:]
                             if len(old_character) == 0:
                                 old_character = character
@@ -139,15 +182,15 @@ class App:
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((eval, line))
                     else:
-                        dialogue_font = self.fonts[("Times New Roman", 28)]
+                        dialogue_font: pygame.font.SysFont = self.fonts[("Times New Roman", 28)]
                         character, dialogue = line.split(": ")
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.show_name_event, character))
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.focus_event, character))
-                        character_name = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
-                        character_color = self.rendered_names[character].color
-                        rendered_line = Text(DIALOGUE_POS, dialogue_font, dialogue, character_color, width=1200, border=True)
+                        character_name: str = character[character.find("(") + 1:-1] if character.find("(") != -1 else character
+                        character_color: str = self.rendered_names[character].color
+                        rendered_line: Text = Text(DIALOGUE_POS, dialogue_font, dialogue, character_color, width=DIALOGUE_WIDTH, border=True)
                         self.rendered_dialogue.append(rendered_line)
                         self.rendered_dialogue.append(len(self.chapter_events))
                         self.chapter_events.append((self.unfocus_event, character))
@@ -167,9 +210,9 @@ class App:
     def format_dialogue(self) -> None:
         if "{" not in self.current_dialogue.text:
             return
-        text = self.current_dialogue.text
-        start = text.find("{")
-        end = text.find("}")
+        text: str = self.current_dialogue.text
+        start: int = text.find("{")
+        end: int = text.find("}")
         text = f"{text[:start]}{eval(text[start + 1:end])}{text[end + 1:]}"
         self.current_dialogue.render_text(text)
 
@@ -214,7 +257,8 @@ class App:
                 self.current_dialogue.visible = True
 
     def mousebuttondown_callback(self, event) -> None:
-        self.progress_chapter()
+        if self.chapter is not None:
+            self.progress_chapter()
     # endregion
 
     @staticmethod

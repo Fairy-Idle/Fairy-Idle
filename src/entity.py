@@ -15,7 +15,7 @@ class Entity:
             self.image = self.image.convert_alpha()
             self.focus = self.focus.convert_alpha()
         else:
-            self.image = None
+            self.image = Surface((width, height))
             self.focus = None
         self.visible: bool = True
         self.focused: bool = False
