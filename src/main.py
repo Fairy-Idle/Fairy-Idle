@@ -14,7 +14,7 @@ pass
 # region VN Variables
 SPRITE_SIZE: tuple[int, int] = (512, 512)
 DIALOGUE_POS: tuple[int, int] = (40, 640)
-DIALOGUE_WIDTH: int = 1200 / 1280 * WINDOW_SIZE[0]
+DIALOGUE_WIDTH: int = 1200
 NAME_POS: tuple[int, int] = (40, 600)
 # endregion
 
@@ -37,11 +37,10 @@ class App:
         self.idle_surface: pygame.Surface = pygame.Surface(WINDOW_SIZE)
         self.idle_pos: tuple[int, int] = (0, 0)
         self.inventory_pos: tuple[int, int] = (20, 20)
-        self.inventory: Text = Text(self.inventory_pos, self.fonts[("Times New Roman", 28)], "Inventory", (0, 255, 0), None, WINDOW_SIZE[0] / 4, 680 / 720 * WINDOW_SIZE[1], True, "center")
 
         self.chapter: Chapter = None
         self.chapter_events: list[callable, str] = list()
-        self.event_index: int = 0
+        self.event_index: int = int()
 
         self.rendered_characters: dict[str: Entity] = dict()
         self.rendered_names: dict[str: Text] = dict()
@@ -79,28 +78,26 @@ class App:
     def draw(self) -> None:
         self.screen.fill((0, 0, 0))
         self.vn_surface.fill((0, 0, 0))
+        self.idle_surface.fill((0, 0, 0))
 
+        mode_surface, surfaces, pos = self.get_surfaces()
+        for surface in surfaces:
+            surface.draw(mode_surface)
+        self.screen.blit(mode_surface, pos)
+
+    def get_surfaces(self) -> tuple[pygame.Surface, list[Entity | Text], tuple[int, int]]:
         self.vn_surfaces.clear()
         self.idle_surfaces.clear()
-        if self.mode == "vn":
-            self.get_vn_surfaces()
-            for surface in self.vn_surfaces:
-                surface.draw(self.vn_surface)
-            self.screen.blit(self.vn_surface, self.vn_pos)
-        elif self.mode == "idle":
-            self.get_idle_surfaces()
-            for surface in self.idle_surfaces:
-                surface.draw(self.idle_surface)
-            self.screen.blit(self.idle_surface, self.idle_pos)
-
-    def get_vn_surfaces(self) -> None:
-        self.vn_surfaces.extend(self.rendered_names.values())
-        self.vn_surfaces.extend(self.rendered_characters.values())
-        if self.current_dialogue is not None:
-            self.vn_surfaces.append(self.current_dialogue)
-
-    def get_idle_surfaces(self) -> None:
-        self.idle_surfaces.append(self.inventory)
+        match self.mode:
+            case "vn":
+                self.vn_surfaces.extend(self.rendered_names.values())
+                self.vn_surfaces.extend(self.rendered_characters.values())
+                if self.current_dialogue is not None:
+                    self.vn_surfaces.append(self.current_dialogue)
+                return self.vn_surface, self.vn_surfaces, self.vn_pos
+            case "idle":
+                self.idle_surfaces.append(self.inventory)
+                return self.idle_surface, self.idle_surfaces, self.idle_pos
 
     def load_chapter(self, chapter_name) -> None:
         self.chapter = Chapter(chapter_name)
@@ -111,7 +108,7 @@ class App:
 
     def load_idle(self) -> None:
         self.mode = "idle"
-        pass
+        self.inventory: Text = Text(self.inventory_pos, self.fonts[("Times New Roman", 28)], "Inventory", (0, 255, 0), None, 320, 680, True, "center")
 
     def render_characters(self) -> None:
         self.rendered_characters.clear()
