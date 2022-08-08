@@ -3,7 +3,7 @@ import pygame
 
 
 class Entity:
-    def __init__(self, pos: tuple, image: str = None, width=0, height=0) -> None:
+    def __init__(self, pos: tuple, image: str = None, width: int = 0, height: int = 0, transition: tuple = None, timer: float = 0.0) -> None:
         self.pos = pos
         self.width = width
         self.height = height
@@ -19,6 +19,11 @@ class Entity:
             self.focus = None
         self.visible: bool = True
         self.focused: bool = False
+        self.transitioning: bool = False
+        self.transition: tuple = transition
+        self.timer: float = timer
+        self.orig_timer: float = timer
+        self.frames: int = 0
 
     def draw(self, screen: Surface) -> None:
         if not self.visible:

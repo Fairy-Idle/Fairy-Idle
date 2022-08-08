@@ -2,6 +2,7 @@ import pygame
 from chapter import Chapter
 from entity import Entity
 from text import Text
+from button import Button
 from player import Player
 
 
@@ -47,9 +48,9 @@ class App:
         self.rendered_dialogue: list[Text] = list()
         self.current_dialogue: Text = None
 
-        self.vn_surfaces: list[Entity | Text] = list()
-        self.inventory_surfaces: list[Entity | Text] = list()
-        self.idle_surfaces: list[Entity | Text] = list()
+        self.vn_surfaces: list[Entity | Text | Button] = list()
+        self.inventory_surfaces: list[Entity | Text | Button] = list()
+        self.idle_surfaces: list[Entity | Text | Button] = list()
 
         self.mode: str = str()
         self.player = Player("Sacred")
@@ -82,10 +83,12 @@ class App:
 
         mode_surface, surfaces, pos = self.get_surfaces()
         for surface in surfaces:
+            if surface.transitioning:
+                surface.transition[0](surface, *surface.transition[1:])
             surface.draw(mode_surface)
         self.screen.blit(mode_surface, pos)
 
-    def get_surfaces(self) -> tuple[pygame.Surface, list[Entity | Text], tuple[int, int]]:
+    def get_surfaces(self) -> tuple[pygame.Surface, list[Entity | Text | Button], tuple[int, int]]:
         self.vn_surfaces.clear()
         self.idle_surfaces.clear()
         match self.mode:
@@ -97,6 +100,7 @@ class App:
                 return self.vn_surface, self.vn_surfaces, self.vn_pos
             case "idle":
                 self.idle_surfaces.append(self.inventory)
+                self.idle_surfaces.append(self.inventory_button)
                 return self.idle_surface, self.idle_surfaces, self.idle_pos
 
     def load_chapter(self, chapter_name) -> None:
@@ -108,7 +112,9 @@ class App:
 
     def load_idle(self) -> None:
         self.mode = "idle"
-        self.inventory: Text = Text(self.inventory_pos, self.fonts[("Times New Roman", 28)], "Inventory", (0, 255, 0), None, 320, 680, True, "center")
+        self.inventory: Text = Text(self.inventory_pos, self.fonts[("Times New Roman", 28)], "Inventory", (0, 255, 0), None, width=320, height=680, border=True, justify="center", transition=(self.smooth_translation, (-320, 20), (20, 20)), timer=0.5)
+        self.inventory.visible = False
+        self.inventory_button: Button = Button((20, 350), self.fonts[("Times New Roman", 28)], ">", color=(0, 255, 0), border=True, active=lambda: [setattr(self.inventory, "visible", True), self.inventory.transition[0](self.inventory, *self.inventory.transition[1:])])
 
     def render_characters(self) -> None:
         self.rendered_characters.clear()
@@ -253,9 +259,32 @@ class App:
             case pygame.K_e:
                 self.current_dialogue.visible = True
 
-    def mousebuttondown_callback(self, event) -> None:
+    def mousebuttondown_callback(self, event: pygame.event.Event) -> None:
         if self.chapter is not None:
             self.progress_chapter()
+        for button in [entity for entity in self.idle_surfaces if isinstance(entity, Button)]:
+            if 0 < event.pos[0] - button.pos[0] < button.get_width() and 0 < event.pos[1] - button.pos[1] < button.get_height():
+                button.active()
+    # endregion
+
+    # region Transition Methods
+    def smooth_translation(self, obj: Entity | Text | Button, start: tuple[int, int], end: tuple[int, int]) -> None:
+        if not obj.transitioning:
+            obj.transitioning = True
+            obj.pos = start
+            obj.frames = 60 * obj.timer
+        elif obj.timer > 0:
+            obj.timer -= self.clock.get_time() / 1000
+            pos = list(obj.pos)
+            pos[0] += (end[0] - start[0]) / obj.frames
+            pos[1] += (end[1] - start[1]) / obj.frames
+            if pos[0] > end[0] or pos[1] > end[1]:
+                pos = end
+            obj.pos = tuple(pos)
+        else:
+            obj.timer = obj.orig_timer
+            obj.transitioning = False
+            obj.pos = end
     # endregion
 
     @staticmethod

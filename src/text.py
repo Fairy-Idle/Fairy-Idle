@@ -5,8 +5,8 @@ from pygame.draw import line
 
 
 class Text(Entity):  # todo is this class necessary? might be needless abstraction and can be substituted with a function or two...
-    def __init__(self, pos: tuple, font: Font, text: str, color: tuple, image: str = None, width: int = 0, height: int = 0, border: bool = True, justify: str = "left") -> None:
-        super().__init__(pos, image, width, height)
+    def __init__(self, pos: tuple, font: Font, text: str, color: tuple, *args, border: bool = True, justify: str = "left", **kwargs) -> None:
+        super().__init__(pos, *args, **kwargs)
         self.pos: tuple = pos
         self.font: Font = font
         self.text: str = text
@@ -19,13 +19,19 @@ class Text(Entity):  # todo is this class necessary? might be needless abstracti
     def render_text(self, text):
         self.render = self.font.render(text, True, self.color)
 
+    def get_width(self) -> int:
+        return self.width if self.width > 0 else self.render.get_width() + 10
+
+    def get_height(self) -> int:
+        return self.height if self.height > 0 else self.render.get_height() * 1.25
+
     def draw(self, screen: Surface) -> None:
         if not self.visible:
             return
         super().draw(screen)
         pos = list(self.pos)  # todo resource intensive?
-        width = self.width if self.width > 0 else self.render.get_width() + 10
-        height = self.height if self.height > 0 else self.render.get_height() * 1.25
+        width = self.get_width()
+        height = self.get_height()
         if self.border:
             x_pos = (self.pos[0], self.pos[0] + width)
             y_pos = (self.pos[1], self.pos[1] + height)
